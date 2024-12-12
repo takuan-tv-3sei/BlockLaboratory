@@ -2,25 +2,57 @@ const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
 let canAddBlock = true;
+const SPACE_TO_PLACE = "Lava";
 
-// ブロックリストと盤面上のブロック
+let translations = {
+    "Lava": [ja = "溶岩", en = "Lava"],
+    "Water": [ja = "水", en = "Water"],
+    "SodaStone": [ja = "左右田ストーン", en = "Soda Stone"],
+    "Ocean": [ja = "海", en = "Ocean"],
+    "Deerium": [ja = "シカニウム", en = "Deerium"],
+    "Saba": [ja = "サバ", en = "Saba"],
+    "Sabanium": [ja = "サバニウム", en = "Sabanium"],
+    "IronPowder": [ja = "鉄粉", en = "Powder of Iron"],
+    "Iron": [ja = "鉄", en = "Iron"],
+    "SabaCan": [ja = "鯖缶", en = "Canned Saba"]
+}
+
 const BlockList = [
-    { id: "Lava", color: "red" },
-    { id: "Water", color: "blue" },
-    { id: "SodaStone", color: "lightblue" },
-    { id: "Ocean", color: "blue"},
-    { id: "Deerium", color: "lightgreen"},
-    { id: "Saba", color: "darkblue"},
+    { id: "Lava", color: "red", displayName: "" },
+    { id: "Water", color: "blue", displayName: "" },
+    { id: "SodaStone", color: "lightblue", displayName: "" },
+    { id: "Ocean", color: "blue", displayName: "" },
+    { id: "Deerium", color: "lightgreen", displayName: "" },
+    { id: "Saba", color: "darkblue", displayName: "" },
+    { id: "Sabanium", color: "darkblue", displayName: "" },
+    { id: "IronPowder", color: "gray", displayName: "" },
+    { id: "Iron", color: "darkgray", displayName: "" },
+    { id: "SabaCan", color: "lightblue", displayName: "" },
 ];
 let blocks = [];
+
+function applyDisplayName() {
+    Object.entries(translations).forEach(([blockId, translation]) => {
+        const block = BlockList.find(b => b.id === blockId);
+        if (block) {
+            block.displayName = translation[0];
+        }
+    });
+}
+
+applyDisplayName()
 
 // レシピ: 合体の条件
 const recipes = [
     { gradient1: "Lava", gradient2: "Lava", result: "Water" },
     { gradient1: "Lava", gradient2: "Water", result: "SodaStone" },
+    { gradient1: "Lava", gradient2: "SodaStone", result: "IronPowder"},
     { gradient1: "Water", gradient2: "SodaStone", result: "Ocean"},
-    { gradient1: "Ocean", gradient2: "Deerium", result: "Saba"},
-    { gradient1: "SodaStone", gradient2: "SodaStone", result: "Deerium"}
+    { gradient1: "Ocean", gradient2: "Deerium", result: "Sabanium"},
+    { gradient1: "SodaStone", gradient2: "SodaStone", result: "Deerium"},
+    { gradient1: "Sabanium", gradient2: "Sabanium", result: "Saba"},
+    { gradient1: "IronPowder", gradient2: "IronPowder", result: "Iron"},
+    { gradient1: "Saba", gradient2: "Iron", result: "SabaCan" }
 ];
 
 // マウス位置をトラッキング
@@ -39,6 +71,7 @@ class Block {
         this.color = BlockList.find(block => block.id === id).color;
         this.x = x;
         this.y = y;
+        this.displayName = BlockList.find(block => block.id === id).displayName;
         this.width = 50;
         this.height = 50;
         this.isDragging = false;
@@ -60,7 +93,7 @@ class Block {
         ctx.textBaseline = "middle";
 
         // 自動改行処理
-        this.drawTextWithWrap(this.id, this.x + this.width / 2, this.y + this.height / 2, this.width - 10);
+        this.drawTextWithWrap(this.displayName, this.x + this.width / 2, this.y + this.height / 2, this.width - 10);
     }
 
     // 自動改行処理
@@ -142,7 +175,7 @@ canvas.addEventListener("mouseup", () => {
 document.addEventListener("keydown", (e) => {
     if (e.code === "Space" && canAddBlock) {
         // 赤ブロックを生成
-        const newBlock = new Block("Lava", mouseX - 25, mouseY - 25);
+        const newBlock = new Block(SPACE_TO_PLACE, mouseX - 25, mouseY - 25);
         blocks.push(newBlock);
 
         // 衝突チェックと即時合成
@@ -152,7 +185,7 @@ document.addEventListener("keydown", (e) => {
         canAddBlock = false;
         setTimeout(() => {
             canAddBlock = true;
-        }, 2000); // 2秒のクールダウン
+        }, 20); // 2秒のクールダウン
     }
 });
 
